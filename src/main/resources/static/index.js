@@ -38,29 +38,25 @@ async function getTableWithUsers() {
         .then(res => res.json())
         .then(users => {
             users.forEach(user => {
-                let tableFilling = `$(
-                        <tr>
-                            <td>${user.id}</td>
-                            <td>${user.username}</td>
-                            <td>${user.firstName}</td>
-                            <td>${user.lastName}</td>
-                            <td>${user.phoneNumber}</td>
-                            <td>${user.email}</td>
-                            <td>${user.roles.map(function (role) {
-                    return `<p style="display: inline;">${role.roleName.substr(5) + " "}</p>`
-                })}
-                            </td>
-                            <td>
-                                <button type="button" data-userid="${user.id}" data-action="edit" class="btn btn-info" 
-                                data-toggle="modal" data-target="#someDefaultModal">Edit</button>
-                            </td>
-                            <td>
-                                <button type="button" data-userid="${user.id}" data-action="delete" class="btn btn-danger" 
-                                data-toggle="modal" data-target="#someDefaultModal">Delete</button>
-                            </td>
-                        </tr>
-                )`;
-                table.append(tableFilling);
+                table.append($('<tr class="border-top bg-light">').attr('id', 'userRow[' + user.id + ']')
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][id]').text(user.id))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][id]').text(user.username))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][firstName]').text(user.firstName))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][lastName]').text(user.lastName))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][age]').text(user.phoneNumber))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][email]').text(user.email))
+                    .append($('<td>').attr('id', 'userData[' + user.id + '][roles]').text(user.roles.map(role => role.roleName)))
+
+                    //обработчик клика на кнопке Edit в таблице юзеров c показом формы
+                    .append($('<td>').append($('<button type="button" data-userid="' + user.id +
+                        '" data-action="edit" class="btn btn-info" data-toggle="modal" data-target="#someDefaultModal">')
+                        .text('Edit')))
+
+                    //обработчик клика на кнопке Delete в таблице юзеров c показом формы
+                    .append($('<td>').append($('<button type="button" data-userid="' + user.id +
+                        '" data-action="delete" class="btn btn-danger" data-toggle="modal" data-target="#someDefaultModal">')
+                        .text('Delete')))
+                );
             })
         })
 
@@ -153,7 +149,8 @@ async function editUser(modal, id) {
                 <select multiple size=${roles.length} name="roles"
                  class="form-control" id="editRoles" style="text-align:left;">
                  ${roles.map(function (role) {
-                return `<option value="${role.roleName}">${role.roleName}</option>`})}
+                return `<option value="${role.roleName}">${role.roleName}</option>`
+            })}
                 </select>
                 <br/>
                 </label>
@@ -217,8 +214,15 @@ async function editUser(modal, id) {
         const response = await userFetchService.updateUser(data, id);
 
         if (response.ok) {
-            await getTableWithUsers();
+            // await getTableWithUsers();
             modal.modal('hide');
+            $('#userData\\[' + data.id + '\\]\\[username\\]').text(data.username)
+            $('#userData\\[' + data.id + '\\]\\[firstName\\]').text(data.firstName)
+            $('#userData\\[' + data.id + '\\]\\[lastName\\]').text(data.lastName)
+            $('#userData\\[' + data.id + '\\]\\[phoneNumber\\]').text(data.phoneNumber)
+            $('#userData\\[' + data.id + '\\]\\[email\\]').text(data.email)
+            $('#userData\\[' + data.id + '\\]\\[roles\\]').text(data.roles.map(role => role.roleName));
+
         } else {
             let body = await response.json();
             let alert = `<div class="alert alert-danger alert-dismissible fade show col-12" role="alert" id="sharaBaraMessageError">
@@ -234,7 +238,9 @@ async function editUser(modal, id) {
 
 async function deleteUser(modal, id) {
     await userFetchService.deleteUser(id);
-    await getTableWithUsers();
+    // await getTableWithUsers();
+    $("#mainTableWithUsers").find('#userRow\\[' + id + '\\]').remove();
+
     modal.find('.modal-title').html('');
     modal.find('.modal-body').html('User was deleted');
     let closeButton = `<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>`
@@ -294,6 +300,7 @@ async function addNewUser() {
         const response = await userFetchService.addNewUser(data);
         if (response.ok) {
             await getTableWithUsers();
+
             addUserForm.find('#AddNewUserName').val('');
             addUserForm.find('#AddNewUserPassword').val('');
             addUserForm.find('#AddNewUserFirstName').val('');
